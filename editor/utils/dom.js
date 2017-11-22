@@ -1,31 +1,56 @@
 include(function() {
 
 	return {
-
-		create: function(tag, parent, styles, attributes, innerHtml)
-		{
-			styles = styles || { };
-			attributes = attributes || { };
-			innerHtml = innerHtml || "";
 	
+		elm: function(opts)
+		{
+			var tag = opts.tag || "div";
+			var attribs = opts.attribs || {};
+			var classes = opts.classes || [];
+			var styles = opts.styles || {};
+			var content = opts.content || "";
 			var elm = document.createElement(tag);
 	
-			for(var prop in styles) {
-				if(styles.hasOwnProperty(prop)) {
-					elm.style[prop] = styles[prop];
+			for(var i=0; i<classes.length; i++) {
+				elm.classList.add(classes[i]);
+			}
+	
+			for(var attrib in attribs) {
+				if(attribs.hasOwnProperty(attrib)) {
+					elm.setAttribute(attrib, attribs[attrib]);
 				}
 			}
 	
-			for(var prop in attributes) {
-				if(attributes.hasOwnProperty(prop)) {
-					elm.setAttribute(prop, attributes[prop]);
+			for(var style in styles) {
+				if(styles.hasOwnProperty(style)) {
+					elm.style[style] = styles[style];
 				}
 			}
 	
-			elm.innerHTML = innerHtml;
-			parent.appendChild(elm);
-	
+			elm.innerHTML = content;
+			
 			return elm;
+		},
+		
+		div: function(opts)
+		{
+			opts = opts || {};
+			opts.tag = "div";
+			return this.elm(opts);
+		},
+		
+		span: function(opts)
+		{
+			opts = opts || {};
+			opts.tag = "span";
+			return this.elm(opts);
+		},
+		
+		textarea: function(opts)
+		{
+			opts = opts || {};
+			opts.tag = "textarea";
+			return this.elm(opts);
 		},
 	
 	};

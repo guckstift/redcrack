@@ -16,6 +16,7 @@ include(function(utils_oop, utils_Comparable, Emitter) {
 			
 			this.view = view;
 			this.buffer = this.view.buffer;
+			this.tokenizer = this.view.tokenizer;
 			this.row = 0;
 			this.offs = 0;
 		},
@@ -33,6 +34,21 @@ include(function(utils_oop, utils_Comparable, Emitter) {
 		{
 			return this.view.offsToCol(this.row, this.offs);
 		},
+		
+		getCurLineLength: function()
+		{
+			return this.buffer.getLineLength(this.row);
+		},
+		
+		isAtLineStart: function()
+		{
+			return this.offs === 0;
+		},
+		
+		isAtLineEnd: function()
+		{
+			return this.offs === this.getCurLineLength();
+		},
 	
 		set: function(row, offs)
 		{
@@ -44,7 +60,10 @@ include(function(utils_oop, utils_Comparable, Emitter) {
 			this.offs = this.buffer.getClampedOffs(row, offs);
 		
 			if(this.hasListeners("change") && !this.isEqual(old)) {
-				this.trigger("change");
+				this.trigger(
+					"change",
+					{ oldRow: old.row, oldOffs: old.offs, newRow: this.row, newOffs: this.offs }
+				);
 			}
 		
 			return this;
@@ -73,6 +92,18 @@ include(function(utils_oop, utils_Comparable, Emitter) {
 		gotoLineEnd: function()
 		{
 			this.set(this.row, this.buffer.getLineLength(this.row));
+		},
+		
+		gotoTokenStart: function()
+		{
+			var tok = this.tokenizer.getTokenAt(this.row, this.offs);
+			this.set(this.row, tok.offs);
+		},
+		
+		gotoTokenEnd: function()
+		{
+			var tok = this.tokenizer.getTokenAt(this.row, this.offs);
+			this.set(this.row, tok.offs + tok.length);
 		},
 		
 		left: function()
@@ -117,6 +148,16 @@ include(function(utils_oop, utils_Comparable, Emitter) {
 			else {
 				this.gotoRowCol(this.row + 1, this.getCol());
 			}
+		},
+		
+		pageUp: function()
+		{
+			this.set(this.row - 50, this.getCol());
+		},
+		
+		pageDown: function()
+		{
+			this.set(this.row + 50, this.getCol());
 		},
 		
 		copy: function()

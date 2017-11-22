@@ -1,16 +1,21 @@
 /*
 	include.js
 	
-	version: 2017.11.10
+	version: 2017.11.22
 */
 
 var include = (function() {
 
 	var debugMode = false;
-	var urlModMap = { };
+	var urlModMap = {};
 	var currentScriptUrl = "";
 	var currentScriptDir = "";
 	var currentScriptMod = null;
+	var bakeMode = false;
+	var bakedSrc = "";
+	var totalIncludesToFinalize = 0;
+	var modCount = 0;
+	var aliasMap = {};
 	
 	function include(urls, callback)
 	{
@@ -26,6 +31,7 @@ var include = (function() {
 			currentScriptMod = getMod(currentScriptUrl);
 		}
 		
+		totalIncludesToFinalize++;
 		var urlsToLoad = urls.length;
 		var thisIncludeScriptMod = currentScriptMod;
 		
@@ -57,7 +63,26 @@ var include = (function() {
 				depMods.push(getMod(urls[i]).data);
 			}
 			
-			var data = callback.apply(this, depMods);
+			totalIncludesToFinalize--;
+			
+			if(bakeMode) {
+				bakedSrc += "mods['" + thisIncludeScriptMod.modId + "'] = ";
+				bakedSrc += "(" + callback.toString() + ")(";
+				
+				for(var i=0; i<urls.length; i++) {
+					var depMod = getMod(urls[i]);
+					bakedSrc += "mods['" + depMod.modId + "'],";
+				}
+				
+				bakedSrc += ");\n\n";
+				
+				if(totalIncludesToFinalize === 0) {
+					bakeFinished();
+				}
+			}
+			else {
+				var data = callback.apply(this, depMods);
+			}
 			
 			thisIncludeScriptMod.data = data;
 		}
@@ -65,7 +90,27 @@ var include = (function() {
 	
 	include.bake = function bake(urls, callback)
 	{
+		bakeMode = true;
+		
+		bakedSrc = "";
+		bakedSrc += "(function() {\n";
+		bakedSrc += "var mods = {};\n";
+		
+		include(urls, callback);
 	};
+	
+	include.addAlias = function addAlias(alias, url)
+	{
+		aliasMap[alias] = url;
+	};
+	
+	function bakeFinished()
+	{
+		bakedSrc += "\n})();";
+		console.log(bakedSrc);
+		
+		bakeMode = false;
+	}
 	
 	function validateArgs(urls, callback)
 	{
@@ -91,6 +136,10 @@ var include = (function() {
 			}
 		}
 		
+		for(var i=0; i<urls.length; i++) {
+			urls[i] = resolveAlias(urls[i]);
+		}
+		
 		return {
 			urls: urls,
 			callback: callback,
@@ -107,12 +156,34 @@ var include = (function() {
 			.filter(function(arg) { return arg !== ""; });
 		
 		for(var i=urls.length; i<argList.length; i++) {
-			var arg = argList[i].split("_");
+			var arg = argList[i];
+
+			if(hasAlias(arg)) {
+				arg = resolveAlias(arg);
+			}
+			else {
+				arg = "./" + arg.split("_").join("/") + ".js";
+			}
 			
-			urls.push("./" + arg.join("/") + ".js");
+			urls.push(arg);
 		}
 		
 		return urls;
+	}
+	
+	function hasAlias(query)
+	{
+		return aliasMap.hasOwnProperty(query);
+	}
+	
+	function resolveAlias(query)
+	{
+		if(hasAlias(query)) {
+			return aliasMap[query];
+		}
+		else {
+			return query;
+		}
 	}
 	
 	function includeSingle(url, callback)
@@ -198,7 +269,7 @@ var include = (function() {
 		if(urlModMap[url] === undefined) {
 			urlModMap[url] = {
 				added: false, loaded: false, ready: false, data: undefined,
-				url: url, waitingFor: [], readyCallbacks: []
+				url: url, waitingFor: [], readyCallbacks: [], modId: "mod" + modCount++
 			};
 		}
 		

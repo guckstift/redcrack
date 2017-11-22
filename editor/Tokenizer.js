@@ -1,18 +1,23 @@
-include(function(utils_oop, utils_array) {
+include(function(utils_oop, utils_array, Emitter, Worker) {
 
 	var oop = utils_oop;
 	var array = utils_array;
 	
 	return oop.defclass({
+	
+		base: Emitter,
 		
 		ctor: function Tokenizer(buffer, start, states)
 		{
 			oop.bindmethods(this, ["onBufferChange"]);
 			
+			Emitter.call(this);
+			
 			this.buffer = buffer;
 			this.start = start;
 			this.states = states;
 			this.tokenLines = [ { before: this.start, after: this.start, tokens: [] } ];
+			this.worker = new Worker();
 			
 			this.buffer.register("change", this.onBufferChange);
 		},
@@ -29,7 +34,7 @@ include(function(utils_oop, utils_array) {
 					return line.tokens[0];
 				}
 				else if(offs === this.buffer.getLineLength(row)) {
-					return line.tokens.splice(-1)[0];
+					return line.tokens.slice(-1)[0];
 				}
 				
 				var first = 0;
@@ -54,6 +59,18 @@ include(function(utils_oop, utils_array) {
 			return null;
 		},
 		
+		classify: function(type, before, after, text)
+		{
+			return "normal";
+		},
+		
+		classifyAt: function(row, offs)
+		{
+			var tok = this.getTokenAt(row, offs);
+			
+			return this.classify(tok.type, tok.before, tok.after, tok.text);
+		},
+		
 		onBufferChange: function(e)
 		{
 			this.tokenizeLines(e.firstRow, e.delRows, e.newRows);
@@ -68,7 +85,27 @@ include(function(utils_oop, utils_array) {
 				this.tokenizeLine(firstRow + i);
 			}
 			
-			for(var i = firstRow + newRows; i < this.tokenLines.length; i++) {
+			var i = firstRow + newRows;
+			
+			this.worker.push(function tokenizeJob()
+			{
+				if(i < this.tokenLines.length) {
+					var line = this.tokenLines[i];
+					var prevLine = this.tokenLines[i - 1];
+			
+					if(prevLine.after === line.before) {
+						return;
+					}
+				
+					this.tokenizeLine(i);
+					this.trigger("change", {row: i});
+					i++;
+					this.worker.push(tokenizeJob.bind(this));
+				}
+			
+			}.bind(this));
+			
+			/*for(var i = firstRow + newRows; i < this.tokenLines.length; i++) {
 				var line = this.tokenLines[i];
 				var prevLine = this.tokenLines[i - 1];
 			
@@ -77,11 +114,14 @@ include(function(utils_oop, utils_array) {
 				}
 				
 				this.tokenizeLine(i);
-			}
+				this.trigger("change", {row: i});
+			}*/
 		},
 		
 		tokenizeLine: function(row)
 		{
+			console.log("tokenizeline", row);
+			
 			var before = this.getLastRowState(row);
 			var state = before;
 			var tokens = [];
@@ -111,6 +151,13 @@ include(function(utils_oop, utils_array) {
 			
 			if(lastoffs < offs) {
 				tokens.push(this.createOtherToken(line, offs, lastoffs, state));
+			}
+			
+			var rules = this.states[state];
+			var endToken = this.getNextToken(rules, line, offs, "", state);
+			
+			if(endToken !== null) {
+				state = endToken.after;
 			}
 			
 			this.tokenLines[row] = {

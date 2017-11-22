@@ -7,21 +7,14 @@ include(function(utils_oop, utils_dom, Emitter) {
 	
 		base: Emitter,
 	
-		ctor: function Clipboard(view, parentElm)
+		ctor: function Clipboard(display)
 		{
 			oop.bindmethods(this, ["onPaste", "onCopy", "onCut"]);
 			
 			Emitter.call(this);
 			
-			this.parent = parentElm;
-			
-			this.textarea = dom.create(
-				"textarea", this.parent, {
-					position: "absolute", top: "0", left: "0", right: "0", bottom: "0",
-					width: "100%", opacity: "0", backgroundColor: "red", padding: "0",
-					margin: "0", outline: "0", border: "none", height: "100%", color: "blue"
-				}
-			);
+			this.display = display;
+			this.textarea = this.display.textarea;
 			
 			this.textarea.addEventListener("paste", this.onPaste);
 			this.textarea.addEventListener("copy", this.onCopy);

@@ -1,12 +1,45 @@
-include(function(utils_oop, utils_dom, utils_string, Emitter) {
+include(function(utils_oop, utils_dom, utils_string, utils, Ticker) {
 
+	var cssLoaded = false;
 	var oop = utils_oop;
 	var dom = utils_dom;
 	var string = utils_string;
 	
-	return oop.defclass({
+	addEventListener("load", function()
+	{
+		var editorCssFound = false;
+		
+		for(var i=0; i<document.styleSheets.length; i++) {
+			var sheet = document.styleSheets[i];
+		
+			if(sheet.cssRules !== null) {
+				for(var j=0; j<sheet.cssRules.length; j++) {
+					var rule = sheet.cssRules[j];
+				
+					if(rule.selectorText === ".editor-css-loaded") {
+						editorCssFound = true;
+						break;
+					}
+				}
+			}
+		
+			if(editorCssFound) {
+				break;
+			}
+		}
 	
-		base: Emitter,
+		if(!editorCssFound) {
+			document.head.appendChild(dom.elm({
+				tag: "link",
+				attribs: {
+					rel: "stylesheet",
+					href: "./editor/editor.css",
+				},
+			}));
+		}
+	});
+	
+	return oop.defclass({
 	
 		ctor: function Display(view, parentElm)
 		{
@@ -14,90 +47,85 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 				this,
 				[
 					"updateCaret", "updateSelection", "onBufferChange", "blinkCaret",
+					"onTokenizerChange"
 				]
 			);
-			
-			Emitter.call(this);
 			
 			this.view = view;
 			this.buffer = this.view.buffer;
 			this.range = this.view.range;
+			this.tokenizer = this.view.tokenizer;
 			this.cursor = this.range.head;
 			this.parent = parentElm;
 			this.measureCount = 256;
-			this.tabWidth = 4;
+			this.scrollPos = {x: 0, y: 0};
+			this.caretTicker = new Ticker(500, this.blinkCaret.bind(this));
+			this.cssPollTicker = new Ticker(100, this.pollCss.bind(this));
 			
 			this.initDomElements();
 			this.updateCellSize();
-			this.updateCaret();
+			this.cssPollTicker.restart();
 			
 			this.cursor.register("change", this.updateCaret);
 			this.range.register("change", this.updateSelection);
 			this.buffer.register("change", this.onBufferChange);
-			
-			this.startBlinkCaret();
+			this.tokenizer.register("change", this.onTokenizerChange);
 		},
 		
 		screenYToRow: function(y)
 		{
-			return Math.floor(y / this.cellHeight);
+			return Math.floor((y + this.scrollPos.y) / this.cellHeight);
 		},
 		
 		screenXToCol: function(x)
 		{
-			return x / this.cellWidth;
+			return (x + this.scrollPos.x) / this.cellWidth;
 		},
 		
 		initDomElements: function()
 		{
-			this.root = dom.create(
-				"div", this.parent, {
-					width: "100%", height: "256px", backgroundColor: "#ccc",
-					fontFamily: "monospace", position: "relative", outline: "none", cursor: "text"
-				}
-			);
-		
-			this.selectionFirst = dom.create(
-				"div", this.root, {
-					position: "absolute", left: "0px", top: "0px", backgroundColor: "#9cf",
-				}
-			);
-		
-			this.selectionLast = dom.create(
-				"div", this.root, {
-					position: "absolute", left: "0px", top: "0px", backgroundColor: "#9cf",
-				}
-			);
-		
-			this.selectionMiddle = dom.create(
-				"div", this.root, {
-					position: "absolute", left: "0px", top: "0px", backgroundColor: "#9cf",
-				}
-			);
-		
-			this.caret = dom.create(
-				"div", this.root, {
-					display: "block",
-					width: "1px", height: "1px", position: "absolute", left: "0px", top: "0px",
-					backgroundColor: "#000"
-				}
-			);
-		
-			this.content = dom.create(
-				"div", this.root, {
-					whiteSpace: "pre", tabSize: "4", position: "relative"
-				}, {}, "<div></div>"
-			);
-		
-			this.measureBox = dom.create(
-				"div", this.root, {
-					fontFamily: "monospace", visibility: "hidden", display: "none"
-				}
-			);
-		
-			this.baseMeasureChar = dom.create("span", this.measureBox);
-		
-			this.refMeasureChar = dom.create("span", this.measureBox, {}, {}, "A");
+			this.root = this.parent.appendChild(dom.div({
+				classes: ["editor"],
+			}));
+				this.editarea = this.root.appendChild(dom.div({
+					classes: ["editor-editarea"],
+				}));
+					this.scrollarea = this.editarea.appendChild(dom.div({
+						classes: ["editor-scrollarea"],
+					}));
+						this.selectionFirst = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-selection"],
+						}));
+						this.selectionLast = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-selection"],
+						}));
+						this.selectionMiddle = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-selection"],
+						}));
+						this.caret = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-caret"],
+						}));
+						this.content = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-content"],
+							content: "<div></div>",
+						}));
+						this.measureBox = this.scrollarea.appendChild(dom.div({
+							classes: ["editor-measurebox"],
+						}));
+							this.baseMeasureChar = this.measureBox.appendChild(dom.span());
+							this.refMeasureChar = this.measureBox.appendChild(dom.span({
+								content: "A",
+							}));
+				this.lineGutter = this.root.appendChild(dom.div({
+					classes: ["editor-linegutter"],
+					content: "<div>1</div>",
+				}));
+				this.inputarea = this.root.appendChild(dom.div({
+					classes: ["editor-inputarea"],
+				}));
+					this.textarea = this.inputarea.appendChild(dom.textarea({
+						classes: ["editor-textarea"],
+					}));
 		},
 
 		updateCellSize: function()
@@ -113,6 +141,10 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 			this.cellHeight /= this.measureCount;
 		
 			this.measureBox.style.display = "none";
+			
+			this.updateCaret();
+			this.updateSelection();
+			this.updateLineGutter();
 		},
 	
 		updateCaret: function()
@@ -120,7 +152,24 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 			this.caret.style.height = this.cellHeight + "px";
 			this.caret.style.left = (this.cursor.getCol() * this.cellWidth) + "px";
 			this.caret.style.top = (this.cursor.row * this.cellHeight) + "px";
-			this.startBlinkCaret();
+			this.restartBlinkCaret();
+			
+			var editareaRect = this.editarea.getBoundingClientRect();
+			var caretRect = this.caret.getBoundingClientRect();
+			var offsX = caretRect.x - editareaRect.x;
+			var offsY = caretRect.y - editareaRect.y;
+			var editW = editareaRect.width;
+			var editH = editareaRect.height;
+			var caretW = caretRect.width;
+			var caretH = caretRect.height;
+			
+			if(offsY + caretH > editH) {
+				this.setScrollPos(this.scrollPos.x, this.scrollPos.y + (offsY + caretH - editH) + 2);
+			}
+			
+			if(offsY < 0) {
+				this.setScrollPos(this.scrollPos.x, this.scrollPos.y + offsY - 2);
+			}
 		},
 	
 		updateSelection: function()
@@ -173,9 +222,20 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 			var line = this.buffer.getLine(row);
 			var html = "";
 			var col = 0;
+			var curClass = "";
 			
 			for(var i=0; i<line.length; i++) {
 				var ch = line[i];
+				var newClass = this.tokenizer.classifyAt(row, i);
+				
+				if(newClass !== curClass) {
+					if(curClass !== "") {
+						html += "</span>";
+					}
+					
+					html += "<span class=\"editor-tok-" + newClass + "\">";
+					curClass = newClass;
+				}
 				
 				if(ch === "<") {
 					html += "&lt;";
@@ -197,6 +257,8 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 				}
 			}
 			
+			html += "</span>";
+			
 			this.content.children[row].innerHTML = html + "&nbsp;";
 		},
 	
@@ -216,34 +278,110 @@ include(function(utils_oop, utils_dom, utils_string, Emitter) {
 			}
 		},
 		
-		startBlinkCaret: function()
+		updateLineGutter: function(rowCountChange)
 		{
-			clearTimeout(this.blinkTimeoutId);
-			this.caret.style.display = "block";
-			this.blinkTimeoutId = setTimeout(this.blinkCaret, 500);
+			while(rowCountChange < 0) {
+				this.lineGutter.removeChild(this.lineGutter.lastChild);
+				rowCountChange++;
+			}
+			
+			while(rowCountChange > 0) {
+				var nextNumber = this.lineGutter.children.length + 1;
+				var newChild = document.createElement("div");
+				newChild.innerHTML = nextNumber;
+				this.lineGutter.appendChild(newChild);
+				rowCountChange--;
+			}
+			
+			var lineGutterWidth = this.lineGutter.getBoundingClientRect().width;
+			
+			this.editarea.style.left = lineGutterWidth + "px";
+			this.inputarea.style.left = lineGutterWidth + "px";
 		},
 		
-		stopBlinkCaret: function()
+		updateScrollPos: function()
 		{
-			clearTimeout(this.blinkTimeoutId);
-			this.caret.style.display = "block";
+			this.scrollarea.style.left = -this.scrollPos.x + "px";
+			this.scrollarea.style.top = -this.scrollPos.y + "px";
+			this.lineGutter.style.top = -this.scrollPos.y + "px";
 		},
 		
 		blinkCaret: function()
 		{
-			if(this.caret.style.display === "block") {
-				this.caret.style.display = "none";
+			if(this.caret.style.visibility === "visible") {
+				this.caret.style.visibility = "hidden";
 			}
 			else {
-				this.caret.style.display = "block";
+				this.caret.style.visibility = "visible";
+			}
+		},
+		
+		restartBlinkCaret: function()
+		{
+			this.caret.style.visibility = "visible";
+			this.caretTicker.restart();
+		},
+		
+		pollCss: function()
+		{
+			var editorCssFound = false;
+	
+			for(var i=0; i<document.styleSheets.length; i++) {
+				var sheet = document.styleSheets[i];
+		
+				if(sheet.cssRules !== null) {
+					for(var j=0; j<sheet.cssRules.length; j++) {
+						var rule = sheet.cssRules[j];
+				
+						if(rule.selectorText === ".editor-css-loaded") {
+							editorCssFound = true;
+							break;
+						}
+					}
+				}
+		
+				if(editorCssFound) {
+					break;
+				}
 			}
 			
-			this.blinkTimeoutId = setTimeout(this.blinkCaret, 500);
+			if(editorCssFound) {
+				this.cssPollTicker.stop();
+				this.updateCellSize();
+			}
+		},
+		
+		setScrollPos: function(x, y)
+		{
+			var contentRect = this.content.getBoundingClientRect();
+			var editareaRect = this.editarea.getBoundingClientRect();
+			
+			this.scrollPos = {
+				x: x,
+				y: utils.clamp(0, contentRect.height - editareaRect.height, y),
+			};
+			this.updateScrollPos();
+		},
+		
+		scroll: function(dir)
+		{
+			if(dir === "down") {
+				this.setScrollPos(this.scrollPos.x, this.scrollPos.y + this.cellHeight * 5);
+			}
+			else if(dir === "up") {
+				this.setScrollPos(this.scrollPos.x, this.scrollPos.y - this.cellHeight * 5);
+			}
 		},
 		
 		onBufferChange: function(e)
 		{
 			this.updateLines(e.firstRow, e.delRows, e.newRows);
+			this.updateLineGutter(e.newRows - e.delRows);
+		},
+		
+		onTokenizerChange: function(e)
+		{
+			this.updateLine(e.row);
 		},
 	
 	});

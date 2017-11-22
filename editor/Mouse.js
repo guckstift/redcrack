@@ -8,7 +8,7 @@ include(function(utils_oop, Emitter) {
 	
 		ctor: function Mouse(eventTarget)
 		{
-			oop.bindmethods(this, ["onMouseEvent"]);
+			oop.bindmethods(this, ["onMouseEvent", "onWheelEvent"]);
 			
 			Emitter.call(this);
 			
@@ -16,6 +16,8 @@ include(function(utils_oop, Emitter) {
 			this.eventTarget.addEventListener("mousedown", this.onMouseEvent);
 			this.eventTarget.addEventListener("mouseup", this.onMouseEvent);
 			this.eventTarget.addEventListener("mousemove", this.onMouseEvent);
+			this.eventTarget.addEventListener("dblclick", this.onMouseEvent);
+			this.eventTarget.addEventListener("wheel", this.onWheelEvent);
 		},
 		
 		onMouseEvent: function(e)
@@ -43,6 +45,16 @@ include(function(utils_oop, Emitter) {
 				if(eventData.primaryButton) {
 					this.eventTarget.focus();
 				}
+			}
+		},
+		
+		onWheelEvent: function(e)
+		{
+			if(e.deltaY > 0) {
+				this.trigger("wheeldown");
+			}
+			else if(e.deltaY < 0) {
+				this.trigger("wheelup");
 			}
 		},
 	

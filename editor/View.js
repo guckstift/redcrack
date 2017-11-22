@@ -1,15 +1,18 @@
-include(function(utils_oop, Pos, Range) {
+include(function(utils_oop, Pos, Range, History) {
 
 	var oop = utils_oop;
 	
 	return oop.defclass({
 	
-		ctor: function View(buffer)
+		ctor: function View(buffer, tabWidth, tokenizerClass)
 		{
 			this.buffer = buffer;
+			this.tabWidth = tabWidth;
+			this.tokenizerClass = tokenizerClass;
+			this.tokenizer = new this.tokenizerClass(this.buffer);
 			this.cursor = new Pos(this);
 			this.range = new Range(this.cursor);
-			this.tabWidth = 4;
+			this.history = new History(this);
 		},
 		
 		getRangeText: function()

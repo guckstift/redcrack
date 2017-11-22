@@ -1,0 +1,109 @@
+.editor-css-loaded {
+}
+
+.editor {
+	position: relative;
+	width: 100%;
+	height: 256px;
+	background-color: #fff;
+	font-family: monospace;
+	cursor: text;
+	overflow: hidden;
+	user-select: none;
+}
+
+.editor-linegutter {
+	position: absolute;
+	left: 0;
+	top: 0;
+	min-height: 100%;
+	background-color: #ccc;
+	color: #333;
+	text-align: right;
+	padding: 0 0.5em 0 1em;
+}
+
+.editor-editarea {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.editor-scrollarea {
+	position: absolute;
+	left: 0;
+	top: 0;
+	min-width: 100%;
+	min-height: 100%;
+}
+
+.editor-selection {
+	position: absolute;
+	left: 0;
+	top: 0;
+	background-color: #9cf;
+}
+
+.editor-caret {
+	position: absolute;
+	display: block;
+	visibility: visible;
+	width: 1px;
+	height: 1px;
+	left: 0;
+	top: 0;
+	background-color: #000;
+}
+
+.editor-content {
+	position: absolute;
+	top: 0;
+	left: 0;
+	white-space: pre;
+}
+
+.editor-measurebox {
+	visibility: hidden;
+	display: none;
+}
+
+.editor-inputarea {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.editor-textarea {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	padding: 0;
+	margin: 0;
+	outline: 0;
+	border: none;
+}
+
+.editor-tok-comment {
+	color: #090;
+}
+
+.editor-tok-string {
+	color: #900;
+}
+
+.editor-tok-number {
+	color: #099;
+}
+
+.editor-tok-keyword {
+	color: #00f;
+}

@@ -55,6 +55,15 @@ include(function(utils_utils, utils_oop, Emitter) {
 			return this.lines.join(this.lineDelim);
 		},
 		
+		getRangeLines: function(range)
+		{
+			var start = range.getStart();
+			var end = range.getEnd();
+			var rows = range.getRows();
+			
+			return this.getLines(start.row, rows);
+		},
+		
 		getRangeText: function(range)
 		{
 			if(range.buffer !== this) {
@@ -88,6 +97,7 @@ include(function(utils_utils, utils_oop, Emitter) {
 				firstRow: start.row,
 				delRows: end.row - start.row + 1,
 				newRows: newLines.length,
+				delLines: this.getRangeLines(range),
 			}
 		
 			newLines[0] = this.lines[start.row].slice(0, start.offs) + newLines[0];
@@ -98,10 +108,10 @@ include(function(utils_utils, utils_oop, Emitter) {
 			newLines[newLines.length - 1] += this.lines[end.row].slice(end.offs);
 			utils.arrayReplace(this.lines, start.row, rows, newLines);
 		
+			this.trigger("change", changeEventData);
+		
 			range.stopSelecting();
 			range.head.set(newRow, newOffs);
-		
-			this.trigger("change", changeEventData);
 		},
 	
 	});
