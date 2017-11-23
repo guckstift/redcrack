@@ -1,0 +1,3 @@
+[submodule "include.js"]
+	path = libs/include.js
+	url = git@github.com:guckstift/include.js.git
