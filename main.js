@@ -1,5 +1,3 @@
-include(function(editor_Editor) {
+import Editor from "./editor/Editor.js";
 
-	editor = new editor_Editor();
-
-});
+window.editor = new Editor();
