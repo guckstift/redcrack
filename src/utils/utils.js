@@ -14,4 +14,9 @@ export default
 	{
 		Array.prototype.splice.apply(array, [start, count].concat(insert));
 	},
+	
+	arrayRepeat(times, value)
+	{
+		return Array(times).fill(value);
+	},
 }

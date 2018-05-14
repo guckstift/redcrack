@@ -1,4 +1,3 @@
-import array from "./utils/array.js";
 import Emitter from "./Emitter.js";
 import Worker from "./Worker.js";
 
@@ -14,7 +13,7 @@ export default class Tokenizer extends Emitter
 		this.tokenLines = [ { before: this.start, after: this.start, tokens: [] } ];
 		this.worker = new Worker();
 		
-		this.buffer.register("change", e => this.onBufferChange(e));
+		this.buffer.register("change", this, "onBufferChange");
 	}
 	
 	getTokenAt(row, offs)
@@ -115,8 +114,6 @@ export default class Tokenizer extends Emitter
 	
 	tokenizeLine(row)
 	{
-		console.log("tokenizeline", row);
-		
 		var before = this.getLastRowState(row);
 		var state = before;
 		var tokens = [];

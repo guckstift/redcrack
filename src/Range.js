@@ -10,7 +10,7 @@ export default class Range extends Comparable(Emitter)
 		this.head = head;
 		this.buffer = head.buffer;
 		this.anchor = this.head;
-		this.head.register("change", e => this.onHeadChange(e));
+		this.head.register("change", this, "onHeadChange");
 	}
 
 	compare(other)

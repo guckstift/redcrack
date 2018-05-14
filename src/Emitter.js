@@ -1,73 +1,49 @@
+import Subject from "./Subject.js";
+
 export default class Emitter
 {
 	constructor()
 	{
-		this.events = {};
+		this.subjects = {};
+	}
+	
+	subject(event)
+	{
+		return this.subjects[event] = this.subjects[event] || new Subject();
 	}
 	
 	hasListeners(event)
 	{
-		if(event !== undefined) {
-			var listeners = this.events[event] = this.events[event] || [];
-			
-			return listeners.length > 0;
-		}
-		else {
-			for(var event in this.events) {
-				if(this.events.hasOwnProperty(event) && this.events[event].length > 0) {
-					return true;
-				}
-				
-				return false;
-			}
-		}
+		return this.subject(event).hasObservers();
 	}
 
-	register(event, listener)
+	register(event, owner, method)
 	{
-		var listeners = this.events[event] = this.events[event] || [];
-		var index = listeners.indexOf(listener);
-	
-		if(index === -1) {
-			listeners.push(listener);
-		}
-	
-		return this;
+		this.subject(event).register(owner, method);
 	}
 
-	unregister(event, listener)
+	unregister(event, owner)
 	{
-		if(event !== undefined) {
-			if(listener !== undefined) {
-				var listeners = this.events[event] = this.events[event] || [];
-				var index = listeners.indexOf(listener);
-	
-				if(index !== -1) {
-					listeners.splice(index, 1);
-				}
-	
-				return this;
-			}
-			else {
-				this.events[event] = [];
-			}
-		}
-		else {
-			this.events = { };
-		}
-	
-		return this;
+		this.subject(event).unregister(owner);
 	}
 
-	trigger(event, data)
+	unregisterListener(owner)
 	{
-		var listeners = this.events[event] = this.events[event] || [];
-		var data = data || [];
+		Object.values(this.subjects).forEach(subject => subject.unregister(owner));
+	}
 	
-		for(var i=0; i<listeners.length; i++) {
-			listeners[i](data, this);
-		}
+	clear(event)
+	{
+		this.subject(event).clear();
+	}
 	
-		return this;
+	clearAll()
+	{
+		Object.values(this.subjects).forEach(subject => subject.clear());
+	}
+
+	trigger(event, ...data)
+	{
+		this.subject(event).trigger(...data, this);
 	}
 }

@@ -6,8 +6,8 @@ var whiteRule = { re: /^\s+/, type: "white", next: "" };
 
 var keywords = [
 	"if", "else", "while", "for", "function", "break", "continue", "return", "var", "this",
-	"new", "delete", "null", "undefined", "throw", "typeof", "import", "export", "default", "class",
-	"extends",
+	"new", "delete", "null", "undefined", "throw", "typeof", "import", "export", "default",
+	"class", "extends", "from", "in", "of", "let", "const",
 ];
 
 export default class JavaScriptTokenizer extends Tokenizer

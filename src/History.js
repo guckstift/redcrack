@@ -6,25 +6,25 @@ export default class History
 		this.buffer = this.view.buffer;
 		this.cursor = this.view.cursor;
 		this.range = this.view.range;
-		this.history = [];
+		this.moves = [];
 		
-		this.buffer.register("change", e => this.onBufferChange(e));
-		this.cursor.register("change", e => this.onCursorChange(e));
-		this.range.register("change", e => this.onRangeChange(e));
+		this.buffer.register("change", this ,"onBufferChange");
+		this.cursor.register("change", this, "onCursorChange");
+		this.range.register("change", this, "onRangeChange");
 	}
 	
 	onBufferChange(e)
 	{
-		this.history.push({type: "buffer", data: e});
+		this.moves.push({type: "buffer", data: e});
 	}
 	
 	onCursorChange(e)
 	{
-		this.history.push({type: "cursor", data: e});
+		this.moves.push({type: "cursor", data: e});
 	}
 	
 	onRangeChange(e)
 	{
-		this.history.push({type: "range", data: e});
+		this.moves.push({type: "range", data: e});
 	}
 }

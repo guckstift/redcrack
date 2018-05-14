@@ -1,5 +1,4 @@
 import dom from "./utils/dom.js";
-import string from "./utils/string.js";
 import utils from "./utils/utils.js";
 import Ticker from "./Ticker.js";
 
@@ -33,7 +32,7 @@ addEventListener("load", function()
 			tag: "link",
 			attribs: {
 				rel: "stylesheet",
-				href: "./editor/editor.css",
+				href: "./src/editor.css",
 			},
 		}));
 	}
@@ -50,18 +49,18 @@ export default class Display
 		this.cursor = this.range.head;
 		this.parent = parentElm;
 		this.measureCount = 256;
-		this.scrollPos = {x: 0, y: 0};
-		this.caretTicker = new Ticker(500, () => this.blinkCaret());
+		this.scrollPos     = {x: 0, y: 0};
+		this.caretTicker   = new Ticker(500, () => this.blinkCaret());
 		this.cssPollTicker = new Ticker(100, () => this.pollCss());
 		
 		this.initDomElements();
 		this.updateCellSize();
 		this.cssPollTicker.restart();
 		
-		this.cursor.register("change", e => this.updateCaret(e));
-		this.range.register("change", e => this.updateSelection(e));
-		this.buffer.register("change", e => this.onBufferChange(e));
-		this.tokenizer.register("change", e => this.onTokenizerChange(e));
+		this.cursor.register("change", this, "updateCaret");
+		this.range.register("change", this, "updateSelection");
+		this.buffer.register("change", this, "onBufferChange");
+		this.tokenizer.register("change", this, "onTokenizerChange");
 	}
 	
 	screenYToRow(y)
@@ -124,11 +123,11 @@ export default class Display
 	{
 		this.measureBox.style.display = "block";
 	
-		this.baseMeasureChar.innerHTML = string.repeat("A", this.measureCount);
+		this.baseMeasureChar.innerHTML = "A".repeat(this.measureCount);
 		this.cellWidth = this.refMeasureChar.offsetLeft - this.baseMeasureChar.offsetLeft;
 		this.cellWidth /= this.measureCount;
 	
-		this.baseMeasureChar.innerHTML = string.repeat("A<br>", this.measureCount);
+		this.baseMeasureChar.innerHTML = "A<br>".repeat(this.measureCount);
 		this.cellHeight = this.refMeasureChar.offsetTop - this.baseMeasureChar.offsetTop;
 		this.cellHeight /= this.measureCount;
 	
@@ -240,7 +239,7 @@ export default class Display
 			else if(ch === "\t") {
 				var tabcols = this.view.nextTabCol(col) - col;
 				
-				html += string.repeat("&nbsp;", tabcols);
+				html += "&nbsp;".repeat(tabcols);
 				col += tabcols;
 			}
 			else {

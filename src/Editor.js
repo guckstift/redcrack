@@ -10,51 +10,51 @@ export default class Editor
 {
 	constructor()
 	{
-		this.buffer = new Buffer();
-		this.view = new View(this.buffer, 4, JavaScriptTokenizer);
+		this.buffer  = new Buffer();
+		this.view    = new View(this.buffer, 4, JavaScriptTokenizer);
 		this.display = new Display(this.view, document.body);
-		this.clip = new Clipboard(this.display);
-		this.key = new Keyboard(this.clip.textarea);
-		this.mouse = new Mouse(this.clip.textarea);
-		this.cursor = this.view.cursor;
-		this.range = this.view.range;
+		this.clip    = new Clipboard(this.display);
+		this.key     = new Keyboard(this.clip.textarea);
+		this.mouse   = new Mouse(this.clip.textarea);
+		this.cursor  = this.view.cursor;
+		this.range   = this.view.range;
 		
-		this.key.register("ArrowLeft", () => this.gotoLeft());
-		this.key.register("ArrowRight", () => this.gotoRight());
-		this.key.register("ArrowUp", () => this.gotoUp());
-		this.key.register("ArrowDown", () => this.gotoDown());
-		this.key.register("C-ArrowLeft", this.gotoPrevToken.bind(this, false));
-		this.key.register("C-ArrowRight", this.gotoNextToken.bind(this, false));
-		this.key.register("S-ArrowLeft", this.selectDir.bind(this, "left"));
-		this.key.register("S-ArrowRight", this.selectDir.bind(this, "right"));
-		this.key.register("S-ArrowUp", this.selectDir.bind(this, "up"));
-		this.key.register("S-ArrowDown", this.selectDir.bind(this, "down"));
-		this.key.register("C-S-ArrowLeft", this.gotoPrevToken.bind(this, true));
-		this.key.register("C-S-ArrowRight", this.gotoNextToken.bind(this, true));
-		this.key.register("Home", this.gotoLineStart.bind(this, false));
-		this.key.register("End", this.gotoLineEnd.bind(this, false));
-		this.key.register("S-Home", this.gotoLineStart.bind(this, true));
-		this.key.register("S-End", this.gotoLineEnd.bind(this, true));
-		this.key.register("C-a", this.selectAll.bind(this));
-		this.key.register("PageUp", this.pageMove.bind(this, "up", false));
-		this.key.register("PageDown", this.pageMove.bind(this, "down", false));
-		this.key.register("S-PageUp", this.pageMove.bind(this, "up", true));
-		this.key.register("S-PageDown", this.pageMove.bind(this, "down", true));
-		this.key.register("Char", function(e) { this.replaceText(e.key); }.bind(this));
-		this.key.register("Enter", this.breakLine.bind(this));
-		this.key.register("Backspace", this.backspace.bind(this));
-		this.key.register("Delete", this.del.bind(this));
-		this.key.register("Tab", this.indent.bind(this));
+		this.key.register("ArrowLeft", this, "gotoLeft");
+		this.key.register("ArrowRight", this, "gotoRight");
+		this.key.register("ArrowUp", this, "gotoUp");
+		this.key.register("ArrowDown", this, "gotoDown");
+		this.key.register("C-ArrowLeft", this, () => this.gotoPrevToken(false));
+		this.key.register("C-ArrowRight", this, () => this.gotoNextToken(false));
+		this.key.register("S-ArrowLeft", this, () => this.selectDir("left"));
+		this.key.register("S-ArrowRight", this, () => this.selectDir("right"));
+		this.key.register("S-ArrowUp", this, () => this.selectDir("up"));
+		this.key.register("S-ArrowDown", this, () => this.selectDir("down"));
+		this.key.register("C-S-ArrowLeft", this, () => this.gotoPrevToken(true));
+		this.key.register("C-S-ArrowRight", this, () => this.gotoNextToken(true));
+		this.key.register("Home", this, () => this.gotoLineStart(false));
+		this.key.register("End", this, () => this.gotoLineEnd(false));
+		this.key.register("S-Home", this, () => this.gotoLineStart(true));
+		this.key.register("S-End", this, () => this.gotoLineEnd(true));
+		this.key.register("C-a", this, "selectAll");
+		this.key.register("PageUp", this, () => this.pageMove("up", false));
+		this.key.register("PageDown", this, () => this.pageMove("down", false));
+		this.key.register("S-PageUp", this, () => this.pageMove("up", true));
+		this.key.register("S-PageDown", this, () => this.pageMove("down", true));
+		this.key.register("Char", this, e => this.replaceText(e.key));
+		this.key.register("Enter", this, "breakLine");
+		this.key.register("Backspace", this, "backspace");
+		this.key.register("Delete", this, "del");
+		this.key.register("Tab", this, "indent");
 		
-		this.mouse.register("mousedown", this.onMouseDown.bind(this));
-		this.mouse.register("mousemove", this.onMouseMove.bind(this));
-		this.mouse.register("dblclick", this.onDblClick.bind(this));
-		this.mouse.register("wheelup", this.display.scroll.bind(this.display, "up"));
-		this.mouse.register("wheeldown", this.display.scroll.bind(this.display, "down"));
+		this.mouse.register("mousedown", this, "onMouseDown");
+		this.mouse.register("mousemove", this, "onMouseMove");
+		this.mouse.register("dblclick", this, "onDblClick");
+		this.mouse.register("wheelup", this, () => this.display.scroll("up"));
+		this.mouse.register("wheeldown", this, () => this.display.scroll("down"));
 		
-		this.clip.register("copy", function(e) { e.text = this.getText(); }.bind(this));
-		this.clip.register("paste", function(e) { this.replaceText(e.text); }.bind(this));
-		this.clip.register("cut", this.onCut.bind(this));
+		this.clip.register("copy", this, e => e.text = this.getText());
+		this.clip.register("paste", this, e => this.replaceText(e.text));
+		this.clip.register("cut", this, "onCut");
 	}
 	
 	replaceText(text)
