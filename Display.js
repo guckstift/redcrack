@@ -1,42 +1,6 @@
-import dom from "./utils/dom.js";
-import utils from "./utils/utils.js";
+import dom from "./../dom/dom.js";
+import utils from "./utils.js";
 import Ticker from "./Ticker.js";
-
-var cssLoaded = false;
-
-addEventListener("load", function()
-{
-	var editorCssFound = false;
-	
-	for(var i=0; i<document.styleSheets.length; i++) {
-		var sheet = document.styleSheets[i];
-	
-		if(sheet.cssRules !== null) {
-			for(var j=0; j<sheet.cssRules.length; j++) {
-				var rule = sheet.cssRules[j];
-			
-				if(rule.selectorText === ".editor-css-loaded") {
-					editorCssFound = true;
-					break;
-				}
-			}
-		}
-	
-		if(editorCssFound) {
-			break;
-		}
-	}
-
-	if(!editorCssFound) {
-		document.head.appendChild(dom.elm({
-			tag: "link",
-			attribs: {
-				rel: "stylesheet",
-				href: "./src/editor.css",
-			},
-		}));
-	}
-});
 
 export default class Display
 {
@@ -57,10 +21,10 @@ export default class Display
 		this.updateCellSize();
 		this.cssPollTicker.restart();
 		
-		this.cursor.register("change", this, "updateCaret");
-		this.range.register("change", this, "updateSelection");
-		this.buffer.register("change", this, "onBufferChange");
-		this.tokenizer.register("change", this, "onTokenizerChange");
+		this.cursor.on("change", () => this.updateCaret());
+		this.range.on("change", () => this.updateSelection());
+		this.buffer.on("change", e => this.onBufferChange(e));
+		this.tokenizer.on("change", e => this.onTokenizerChange(e));
 	}
 	
 	screenYToRow(y)
@@ -75,48 +39,27 @@ export default class Display
 	
 	initDomElements()
 	{
-		this.root = this.parent.appendChild(dom.div({
-			classes: ["editor"],
-		}));
-			this.editarea = this.root.appendChild(dom.div({
-				classes: ["editor-editarea"],
-			}));
-				this.scrollarea = this.editarea.appendChild(dom.div({
-					classes: ["editor-scrollarea"],
-				}));
-					this.selectionFirst = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-selection"],
-					}));
-					this.selectionLast = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-selection"],
-					}));
-					this.selectionMiddle = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-selection"],
-					}));
-					this.caret = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-caret"],
-					}));
-					this.content = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-content"],
-						content: "<div></div>",
-					}));
-					this.measureBox = this.scrollarea.appendChild(dom.div({
-						classes: ["editor-measurebox"],
-					}));
-						this.baseMeasureChar = this.measureBox.appendChild(dom.span());
-						this.refMeasureChar = this.measureBox.appendChild(dom.span({
-							content: "A",
-						}));
-			this.lineGutter = this.root.appendChild(dom.div({
-				classes: ["editor-linegutter"],
-				content: "<div>1</div>",
-			}));
-			this.inputarea = this.root.appendChild(dom.div({
-				classes: ["editor-inputarea"],
-			}));
-				this.textarea = this.inputarea.appendChild(dom.textarea({
-					classes: ["editor-textarea"],
-				}));
+		this.root = dom("div", {class: "editor"},
+			this.editarea = dom("div", {class: "editor-editarea"},
+				this.scrollarea = dom("div", {class: "editor-scrollarea"},
+					this.selectionFirst = dom("div", {class: "editor-selection"}),
+					this.selectionLast = dom("div", {class: "editor-selection"}),
+					this.selectionMiddle = dom("div", {class: "editor-selection"}),
+					this.caret = dom("div", {class: "editor-caret"}),
+					this.content = dom("div", {class: "editor-content"}, dom("div")),
+					this.measureBox = dom("div", {class: "editor-measurebox"},
+						this.baseMeasureChar = dom("span"),
+						this.refMeasureChar = dom("span", "A"),
+					),
+				),
+			),
+			this.lineGutter = dom("div", {class: "editor-linegutter"}, dom("div", "1")),
+			this.inputarea = dom("div", {class: "editor-inputarea"},
+				this.textarea = dom("textarea", {class: "editor-textarea"}),
+			),
+		);
+		
+		dom(this.parent, this.root);
 	}
 
 	updateCellSize()

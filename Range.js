@@ -1,5 +1,5 @@
-import Comparable from "./utils/Comparable.js";
-import Emitter from "./Emitter.js";
+import Comparable from "./Comparable.js";
+import Emitter from "../emitter/Emitter.js";
 
 export default class Range extends Comparable(Emitter)
 {
@@ -10,7 +10,7 @@ export default class Range extends Comparable(Emitter)
 		this.head = head;
 		this.buffer = head.buffer;
 		this.anchor = this.head;
-		this.head.register("change", this, "onHeadChange");
+		this.head.on("change", () => this.onHeadChange());
 	}
 
 	compare(other)
@@ -76,7 +76,7 @@ export default class Range extends Comparable(Emitter)
 			this.anchor = this.head;
 		
 			if(!this.anchor.isEqual(oldAnchor)) {
-				this.trigger("change");
+				this.emit("change");
 			}
 		}
 	}
@@ -90,7 +90,7 @@ export default class Range extends Comparable(Emitter)
 	onHeadChange()
 	{
 		if(this.isSelecting()) {
-			this.trigger("change");
+			this.emit("change");
 		}
 	}
 }

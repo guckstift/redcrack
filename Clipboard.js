@@ -1,5 +1,5 @@
-import dom from "./utils/dom.js";
-import Emitter from "./Emitter.js";
+import dom from "../dom/dom.js";
+import Emitter from "../emitter/Emitter.js";
 
 export default class Clipboard extends Emitter
 {	
@@ -10,14 +10,14 @@ export default class Clipboard extends Emitter
 		this.display = display;
 		this.textarea = this.display.textarea;
 		
-		this.textarea.addEventListener("paste", e => this.onPaste(e));
-		this.textarea.addEventListener("copy", e => this.onCopy(e));
-		this.textarea.addEventListener("cut", e => this.onCut(e));
+		dom.on(this.textarea, "paste", e => this.onPaste(e));
+		dom.on(this.textarea, "copy", e => this.onCopy(e));
+		dom.on(this.textarea, "cut", e => this.onCut(e));
 	}
 	
 	onPaste(e)
 	{
-		this.trigger("paste", { text: e.clipboardData.getData("text") });
+		this.emit("paste", { text: e.clipboardData.getData("text") });
 		e.preventDefault();
 	}
 	
@@ -25,7 +25,7 @@ export default class Clipboard extends Emitter
 	{
 		var eventData = { text: "" };
 		
-		this.trigger("copy", eventData);
+		this.emit("copy", eventData);
 		e.clipboardData.setData("text", eventData.text);
 		e.preventDefault();
 	}
@@ -34,7 +34,7 @@ export default class Clipboard extends Emitter
 	{
 		var eventData = { text: "" };
 		
-		this.trigger("cut", eventData);
+		this.emit("cut", eventData);
 		e.clipboardData.setData("text", eventData.text);
 		e.preventDefault();
 	}

@@ -1,4 +1,4 @@
-import Emitter from "./Emitter.js";
+import Emitter from "../emitter/Emitter.js";
 import Worker from "./Worker.js";
 
 export default class Tokenizer extends Emitter
@@ -13,7 +13,7 @@ export default class Tokenizer extends Emitter
 		this.tokenLines = [ { before: this.start, after: this.start, tokens: [] } ];
 		this.worker = new Worker();
 		
-		this.buffer.register("change", this, "onBufferChange");
+		this.buffer.on("change", e => this.onBufferChange(e));
 	}
 	
 	getTokenAt(row, offs)
@@ -92,7 +92,7 @@ export default class Tokenizer extends Emitter
 				}
 			
 				this.tokenizeLine(i);
-				this.trigger("change", {row: i});
+				this.emit("change", {row: i});
 				i++;
 				this.worker.push(tokenizeJob.bind(this));
 			}
@@ -108,7 +108,7 @@ export default class Tokenizer extends Emitter
 			}
 			
 			this.tokenizeLine(i);
-			this.trigger("change", {row: i});
+			this.emit("change", {row: i});
 		}*/
 	}
 	

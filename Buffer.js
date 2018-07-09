@@ -1,5 +1,5 @@
-import Emitter from "./Emitter.js";
-import utils from "./utils/utils.js";
+import Emitter from "../emitter/Emitter.js";
+import utils from "./utils.js";
 
 export default class Buffer extends Emitter
 {
@@ -102,9 +102,9 @@ export default class Buffer extends Emitter
 		var newOffs = newLines[newLines.length - 1].length;
 	
 		newLines[newLines.length - 1] += this.lines[end.row].slice(end.offs);
-		utils.arrayReplace(this.lines, start.row, rows, newLines);
+		this.lines.splice(start.row, rows, ...newLines);
 	
-		this.trigger("change", changeEventData);
+		this.emit("change", changeEventData);
 	
 		range.stopSelecting();
 		range.head.set(newRow, newOffs);

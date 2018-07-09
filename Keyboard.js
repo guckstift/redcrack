@@ -1,4 +1,4 @@
-import Emitter from "./Emitter.js";
+import Emitter from "../emitter/Emitter.js";
 
 export default class Keyboard extends Emitter
 {
@@ -41,8 +41,8 @@ export default class Keyboard extends Emitter
 			id += e.key;
 		}
 		
-		if(this.hasListeners(id)) {
-			this.trigger(
+		if(this.subject(id).callbacks.length) {
+			this.emit(
 				id, {
 					key: e.key,
 					ctrl: e.ctrlKey,

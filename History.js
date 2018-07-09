@@ -8,9 +8,9 @@ export default class History
 		this.range = this.view.range;
 		this.moves = [];
 		
-		this.buffer.register("change", this ,"onBufferChange");
-		this.cursor.register("change", this, "onCursorChange");
-		this.range.register("change", this, "onRangeChange");
+		this.buffer.on("change", e => this.onBufferChange(e));
+		this.cursor.on("change", e => this.onCursorChange(e));
+		this.range.on("change", e => this.onRangeChange(e));
 	}
 	
 	onBufferChange(e)

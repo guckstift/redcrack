@@ -1,5 +1,5 @@
-import Comparable from "./utils/Comparable.js";
-import Emitter from "./Emitter.js";
+import Comparable from "./Comparable.js";
+import Emitter from "../emitter/Emitter.js";
 
 export default class Pos extends Comparable(Emitter)
 {
@@ -44,15 +44,15 @@ export default class Pos extends Comparable(Emitter)
 
 	set(row, offs)
 	{
-		if(this.hasListeners("change")) {
+		if(this.subject("change").callbacks.length) {
 			var old = this.copy();
 		}
 				
 		this.row = this.buffer.getClampedRow(row);
 		this.offs = this.buffer.getClampedOffs(row, offs);
 	
-		if(this.hasListeners("change") && !this.isEqual(old)) {
-			this.trigger(
+		if(this.subject("change").callbacks.length && !this.isEqual(old)) {
+			this.emit(
 				"change",
 				{ oldRow: old.row, oldOffs: old.offs, newRow: this.row, newOffs: this.offs }
 			);

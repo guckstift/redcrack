@@ -1,4 +1,4 @@
-import Emitter from "./Emitter.js";
+import Emitter from "../emitter/Emitter.js";
 
 export default class Mouse extends Emitter
 {
@@ -18,7 +18,7 @@ export default class Mouse extends Emitter
 	{
 		var id = e.type;
 		
-		if(this.hasListeners(id)) {
+		if(this.subject(id).callbacks.length) {
 			var clientRect = this.eventTarget.getBoundingClientRect();
 			var eventData = {
 				x: e.clientX - clientRect.left,
@@ -31,11 +31,11 @@ export default class Mouse extends Emitter
 				shift: e.shiftKey,
 				meta: e.metaKey
 			}
+	
+			this.emit(id, eventData);
 		
-			this.trigger(id, eventData);
-			
 			e.preventDefault();
-			
+		
 			if(eventData.primaryButton) {
 				this.eventTarget.focus();
 			}
@@ -45,10 +45,10 @@ export default class Mouse extends Emitter
 	onWheelEvent(e)
 	{
 		if(e.deltaY > 0) {
-			this.trigger("wheeldown");
+			this.emit("wheeldown");
 		}
 		else if(e.deltaY < 0) {
-			this.trigger("wheelup");
+			this.emit("wheelup");
 		}
 	}
 }

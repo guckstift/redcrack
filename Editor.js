@@ -19,42 +19,42 @@ export default class Editor
 		this.cursor  = this.view.cursor;
 		this.range   = this.view.range;
 		
-		this.key.register("ArrowLeft", this, "gotoLeft");
-		this.key.register("ArrowRight", this, "gotoRight");
-		this.key.register("ArrowUp", this, "gotoUp");
-		this.key.register("ArrowDown", this, "gotoDown");
-		this.key.register("C-ArrowLeft", this, () => this.gotoPrevToken(false));
-		this.key.register("C-ArrowRight", this, () => this.gotoNextToken(false));
-		this.key.register("S-ArrowLeft", this, () => this.selectDir("left"));
-		this.key.register("S-ArrowRight", this, () => this.selectDir("right"));
-		this.key.register("S-ArrowUp", this, () => this.selectDir("up"));
-		this.key.register("S-ArrowDown", this, () => this.selectDir("down"));
-		this.key.register("C-S-ArrowLeft", this, () => this.gotoPrevToken(true));
-		this.key.register("C-S-ArrowRight", this, () => this.gotoNextToken(true));
-		this.key.register("Home", this, () => this.gotoLineStart(false));
-		this.key.register("End", this, () => this.gotoLineEnd(false));
-		this.key.register("S-Home", this, () => this.gotoLineStart(true));
-		this.key.register("S-End", this, () => this.gotoLineEnd(true));
-		this.key.register("C-a", this, "selectAll");
-		this.key.register("PageUp", this, () => this.pageMove("up", false));
-		this.key.register("PageDown", this, () => this.pageMove("down", false));
-		this.key.register("S-PageUp", this, () => this.pageMove("up", true));
-		this.key.register("S-PageDown", this, () => this.pageMove("down", true));
-		this.key.register("Char", this, e => this.replaceText(e.key));
-		this.key.register("Enter", this, "breakLine");
-		this.key.register("Backspace", this, "backspace");
-		this.key.register("Delete", this, "del");
-		this.key.register("Tab", this, "indent");
+		this.key.on("ArrowLeft", () => this.gotoLeft());
+		this.key.on("ArrowRight", () => this.gotoRight());
+		this.key.on("ArrowUp", () => this.gotoUp());
+		this.key.on("ArrowDown", () => this.gotoDown());
+		this.key.on("C-ArrowLeft", () => this.gotoPrevToken(false));
+		this.key.on("C-ArrowRight", () => this.gotoNextToken(false));
+		this.key.on("S-ArrowLeft", () => this.selectDir("left"));
+		this.key.on("S-ArrowRight", () => this.selectDir("right"));
+		this.key.on("S-ArrowUp", () => this.selectDir("up"));
+		this.key.on("S-ArrowDown", () => this.selectDir("down"));
+		this.key.on("C-S-ArrowLeft", () => this.gotoPrevToken(true));
+		this.key.on("C-S-ArrowRight", () => this.gotoNextToken(true));
+		this.key.on("Home", () => this.gotoLineStart(false));
+		this.key.on("End", () => this.gotoLineEnd(false));
+		this.key.on("S-Home", () => this.gotoLineStart(true));
+		this.key.on("S-End", () => this.gotoLineEnd(true));
+		this.key.on("C-a", () => this.selectAll());
+		this.key.on("PageUp", () => this.pageMove("up", false));
+		this.key.on("PageDown", () => this.pageMove("down", false));
+		this.key.on("S-PageUp", () => this.pageMove("up", true));
+		this.key.on("S-PageDown", () => this.pageMove("down", true));
+		this.key.on("Char", e => this.replaceText(e.key));
+		this.key.on("Enter", () => this.breakLine());
+		this.key.on("Backspace", () => this.backspace());
+		this.key.on("Delete", () => this.del());
+		this.key.on("Tab", () => this.indent());
 		
-		this.mouse.register("mousedown", this, "onMouseDown");
-		this.mouse.register("mousemove", this, "onMouseMove");
-		this.mouse.register("dblclick", this, "onDblClick");
-		this.mouse.register("wheelup", this, () => this.display.scroll("up"));
-		this.mouse.register("wheeldown", this, () => this.display.scroll("down"));
+		this.mouse.on("mousedown", e => this.onMouseDown(e));
+		this.mouse.on("mousemove", e => this.onMouseMove(e));
+		this.mouse.on("dblclick", e => this.onDblClick(e));
+		this.mouse.on("wheelup", () => this.display.scroll("up"));
+		this.mouse.on("wheeldown", () => this.display.scroll("down"));
 		
-		this.clip.register("copy", this, e => e.text = this.getText());
-		this.clip.register("paste", this, e => this.replaceText(e.text));
-		this.clip.register("cut", this, "onCut");
+		this.clip.on("copy", e => e.text = this.getText());
+		this.clip.on("paste", e => this.replaceText(e.text));
+		this.clip.on("cut", e => this.onCut(e));
 	}
 	
 	replaceText(text)
