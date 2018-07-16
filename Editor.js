@@ -2,8 +2,8 @@ import Buffer from "./Buffer.js";
 import View from "./View.js";
 import Display from "./Display.js";
 import Clipboard from "./Clipboard.js";
-import Keyboard from "./Keyboard.js";
-import Mouse from "./Mouse.js";
+import Keyboard from "../input/Keyboard.js";
+import Mouse from "../input/Mouse.js";
 import JavaScriptTokenizer from "./JavaScriptTokenizer.js";
 
 export default class Editor
@@ -18,6 +18,8 @@ export default class Editor
 		this.mouse   = new Mouse(this.clip.textarea);
 		this.cursor  = this.view.cursor;
 		this.range   = this.view.range;
+		this.dom     = this.display.root;
+		this.mdown   = false;
 		
 		this.key.on("ArrowLeft", () => this.gotoLeft());
 		this.key.on("ArrowRight", () => this.gotoRight());
@@ -48,6 +50,7 @@ export default class Editor
 		
 		this.mouse.on("mousedown", e => this.onMouseDown(e));
 		this.mouse.on("mousemove", e => this.onMouseMove(e));
+		this.mouse.on("mouseup", e => this.onMouseUp(e));
 		this.mouse.on("dblclick", e => this.onDblClick(e));
 		this.mouse.on("wheelup", () => this.display.scroll("up"));
 		this.mouse.on("wheeldown", () => this.display.scroll("down"));
@@ -260,6 +263,8 @@ export default class Editor
 	onMouseDown(e)
 	{
 		if(e.primaryButton) {
+			this.mdown = true;
+			
 			if(!e.shift) {
 				this.range.stopSelecting();
 			}
@@ -273,13 +278,18 @@ export default class Editor
 	
 	onMouseMove(e)
 	{
-		if(e.primaryButton) {
+		if(this.mdown) {
 			this.range.startSelecting();
 			this.cursor.gotoRowCol(
 				this.display.screenYToRow(e.y),
 				this.display.screenXToCol(e.x),
 			);
 		}
+	}
+	
+	onMouseUp(e)
+	{
+		this.mdown = false;
 	}
 	
 	onDblClick(e)

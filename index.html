@@ -5,11 +5,16 @@
 		<link reL="stylesheet" href="./editor.css">
 		<script type="module">
 			import Editor from "./Editor.js";
+			import dom from "../dom/dom.js";
 			window.editor = new Editor();
+			dom(dom.body, editor.dom);
 		</script>
 		<style>
 			body {
 				background-color: #999;
+			}
+			.editor {
+				height: 512px;
 			}
 		</style>
 	</head>

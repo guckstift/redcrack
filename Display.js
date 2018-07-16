@@ -1,17 +1,17 @@
-import dom from "./../dom/dom.js";
+import dom from "../dom/dom.js";
+
 import utils from "./utils.js";
 import Ticker from "./Ticker.js";
 
 export default class Display
 {
-	constructor(view, parentElm)
+	constructor(view)
 	{
 		this.view = view;
 		this.buffer = this.view.buffer;
 		this.range = this.view.range;
 		this.tokenizer = this.view.tokenizer;
 		this.cursor = this.range.head;
-		this.parent = parentElm;
 		this.measureCount = 256;
 		this.scrollPos     = {x: 0, y: 0};
 		this.caretTicker   = new Ticker(500, () => this.blinkCaret());
@@ -58,8 +58,6 @@ export default class Display
 				this.textarea = dom("textarea", {class: "editor-textarea"}),
 			),
 		);
-		
-		dom(this.parent, this.root);
 	}
 
 	updateCellSize()
